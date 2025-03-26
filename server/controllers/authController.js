@@ -7,120 +7,114 @@ const cloudinary = require("../utils/cloudinary"); // Cloudinary utility
 const mongoose = require('mongoose'); // Mongoose utility
 const { uploadToCloudinary, deleteFromCloudinary } = require('../utils/cloudinary'); // Assuming your cloudinary functions are in this file
 const fs = require('fs');
+const AppError = require('../utils/appError');
+const catchAsync = require('../utils/catchAsync');
+const { ADMIN_ACCESS_KEY } = require('../config/adminConfig');
 
-// Generate JWT Token
-const generateToken = (id) => {
-  if (!process.env.JWT_SECRET) {
-    throw new Error('JWT_SECRET is not defined in environment variables.');
-  }
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+const signToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: '7d'
+  });
 };
 
 // Register user
-exports.register = async (req, res) => {
-  try {
-    const { username, password, email } = req.body;
-    const profileImage = "https://tse3.mm.bing.net/th?id=OIP.JttmcrrQ9_XqrY60bFEfgQHaHa&pid=Api&P=0&h=180";
-    // Check for missing fields
-    if (!username || !email || !password) {
-      return res.status(400).json({ message: 'All fields are required.' });
-    }
+exports.register = catchAsync(async (req, res, next) => {
+  const { username, email, password } = req.body;
 
-    // Check if user already exists
-    const existingUser = await User.findOne({
-      $or: [{ email }, { username }]
-    });
-
-    if (existingUser) {
-      return res.status(400).json({
-        message: 'User with this email or username already exists'
-      });
-    }
-
-    // Create new user (password will be hashed by pre-save middleware)
-    const newUser = new User({
-      username,
-      password,
-      email,
-      profileImage
-    });
-
-    await newUser.save();
-
-    res.status(201).json({ message: 'User registered successfully' });
-  } catch (error) {
-    console.error('Error registering user:', error);
-    res.status(500).json({
-      message: 'Server error during registration',
-      error: error.message
-    });
+  // Check if user already exists
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    return next(new AppError('User already exists with this email', 400));
   }
-};
+
+  // Create new user
+  const user = await User.create({
+    username,
+    email,
+    password
+  });
+
+  // Generate token
+  const token = signToken(user._id);
+
+  // Remove password from output
+  user.password = undefined;
+
+  res.status(201).json({
+    status: 'success',
+    token,
+    user
+  });
+});
 
 // Login user
-exports.login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+exports.login = catchAsync(async (req, res, next) => {
+  const { email, password, adminKey } = req.body;
 
-    // Validate input
-    if (!email || !password) {
-      return res.status(400).json({
-        message: 'Please provide email and password.'
-      });
-    }
-
-    // Find user by email and explicitly select password
-    const user = await User.findOne({ email }).select('+password');
-    if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    // Compare password using the method from User model
-    const isPasswordCorrect = await user.comparePassword(password);
-    if (!isPasswordCorrect) {
-      return res.status(401).json({ message: 'Invalid credentials' });
-    }
-
-    // Generate JWT token
-    const token = generateToken(user._id);
-
-    // Remove password from response
-    user.password = undefined;
-
-    res.status(200).json({
-      message: 'Login successful',
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        profileImage: user.profileImage,
-        notification:
-        {
-          id: uuidv4(),
-          type: 'security',
-          title: 'New login detected',
-          message: 'A new login was detected from Chrome on Windows.',
-          timestamp: new Date().toISOString(),
-          read: false,
-          icon: 1
-        }
-      },
-      token,
-    });
-
-  } catch (error) {
-    console.error('Error during login:', error);
-    res.status(500).json({
-      message: 'Server error during login',
-      error: error.message
-    });
+  // Check if email and password exist
+  if (!email || !password) {
+    return next(new AppError('Please provide email and password', 400));
   }
-};
 
+  // Check if user exists && password is correct
+  const user = await User.findOne({ email }).select('+password');
+  if (!user || !(await user.comparePassword(password))) {
+    return next(new AppError('Incorrect email or password', 401));
+  }
 
+  // If adminKey is provided, verify it and check admin role
+  if (adminKey) {
+    if (adminKey !== 'admin_secure_key_12345') {
+      return next(new AppError('Invalid admin access key', 401));
+    }
+    
+    if (user.role !== 'admin') {
+      return next(new AppError('Access denied. Admin privileges required.', 403));
+    }
+  }
 
+  // Generate token
+  const token = signToken(user._id);
 
+  // Remove password from output
+  user.password = undefined;
+
+  res.status(200).json({
+    status: 'success',
+    token,
+    user
+  });
+});
+
+exports.createAdmin = catchAsync(async (req, res, next) => {
+  const { username, email, password } = req.body;
+
+  // Check if user already exists
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    return next(new AppError('User already exists with this email', 400));
+  }
+
+  // Create new admin user
+  const user = await User.create({
+    username,
+    email,
+    password,
+    role: 'admin'
+  });
+
+  // Generate token
+  const token = signToken(user._id);
+
+  // Remove password from output
+  user.password = undefined;
+
+  res.status(201).json({
+    status: 'success',
+    token,
+    user
+  });
+});
 
 exports.uploadDetails = async (req, res) => {
   const { id } = req.params;
@@ -205,8 +199,6 @@ exports.uploadDetails = async (req, res) => {
   }
 };
 
-
-
 exports.getMe = async (req, res) => {
   try {
     // Find the user by ID, which is available in req.userId from the middleware
@@ -221,7 +213,6 @@ exports.getMe = async (req, res) => {
   }
 };
 
-
 exports.getAllUsers = async (req, res) => {
   try{
     const users = await User.find({})
@@ -233,7 +224,6 @@ exports.getAllUsers = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 }
-
 
 exports.handleGoogleAuth = async (req, res) => {
   const { token, user } = req.user;

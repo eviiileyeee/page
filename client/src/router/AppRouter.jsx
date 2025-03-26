@@ -1,19 +1,22 @@
 import React, { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import Navbar from '../components/layout/navbar/Navbar';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import ProtectedRoute from './ProtectedRoute';
+import AdminRoute from '../components/auth/AdminRoute';
 import Loader from '../components/ui/Loader';
-
+import { useAuth } from '../context/AuthContext';
 
 // Lazy Load Pages
 const Hero = lazy(() => import('../pages/Hero'));
 const LoginPage = lazy(() => import('../pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('../pages/auth/Register'));
+const AdminLogin = lazy(() => import('../pages/admin/AdminLogin'));
+const AdminRegister = lazy(() => import('../pages/admin/AdminRegister'));
 const ProfilePage = lazy(() => import('../pages/nav/ProfilePage'));
 const NotificationPage = lazy(() => import('../pages/nav/NotificationPage'));
-const Events = lazy(() => import('../pages/eventPages/Events'));
-const EventCreationForm = lazy(() => import('../pages/eventPages/EventCreationForm'));
-const EventFullView = lazy(() => import('../components/eventComponents/EventFullView'));
+
 const About = lazy(() => import('../components/layout/footer/footerLinks/About'));
 const ContactPage = lazy(() => import('../pages/contactPages/ContactPage'));
 const SearchUserPage = lazy(() => import('../pages/contactPages/SearchUserPage'));
@@ -24,24 +27,45 @@ const Property = lazy(() => import('../pages/nav/Property'));
 const RegisterLand = lazy(() => import('../pages/nav/RegisterLand'));
 const VerifyLand = lazy(() => import('../pages/nav/VerifyLand'));
 const Dashboard = lazy(() => import('../pages/nav/Dashboard'));
+const AdminDashboard = lazy(() => import('../pages/admin/AdminDashboard'));
 
 const AppRouter = () => {
+  const { isAuthenticated } = useAuth();
+
   return (
     <BrowserRouter>
+      <Toaster position="top-right" />
+      <Navbar />
       <Suspense fallback={<Loader />}>
         <Routes>
           {/* Public routes */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
           <Route path="/" element={<DashboardLayout><Hero /></DashboardLayout>} />
+          <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" />} />
+          <Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/dashboard" />} />
+
+          {/* Admin routes */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/register" element={<AdminRegister />} />
+          <Route 
+            path="/admin/dashboard" 
+            element={
+              <AdminRoute>
+                <DashboardLayout><AdminDashboard /></DashboardLayout>
+              </AdminRoute>
+            } 
+          />
 
           {/* Protected routes */}
-          <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route 
+            path="/dashboard" 
+            element={isAuthenticated ? <DashboardLayout><Dashboard /></DashboardLayout> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/profile" 
+            element={isAuthenticated ? <ProtectedRoute><ProfilePage /></ProtectedRoute> : <Navigate to="/login" />} 
+          />
           <Route path="/notification" element={<NotificationPage />} />
-          <Route path="/events" element={<ProtectedRoute><DashboardLayout><Events /></DashboardLayout></ProtectedRoute>} />
-          <Route path="/create" element={<ProtectedRoute><DashboardLayout><EventCreationForm /></DashboardLayout></ProtectedRoute>} />
-          <Route path="/events/:id" element={<EventFullView />} />
+         
 
           {/* Other routes */}
           <Route path="/about" element={<DashboardLayout><About /></DashboardLayout>} />

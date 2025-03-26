@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
@@ -7,7 +9,6 @@ const authRoutes = require("./routes/authRoutes");
 const searchRoutes = require("./routes/searchRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const landRoutes = require('./routes/landRoutes');
-require('dotenv').config();
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -24,7 +25,7 @@ app.use(morgan('dev'));
 // Routes
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/v1/events', eventRoutes);
-app.use("/api/users", authRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/search", searchRoutes);
 app.use('/api/land', landRoutes);
 app.get("/",(req,res)=>   res.send("this is backend of Harendra edc-project"));

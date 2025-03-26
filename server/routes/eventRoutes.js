@@ -1,17 +1,16 @@
 const express = require('express');
 const router = express.Router();
+const { protect, restrictToAdmin } = require('../middleware/authMiddleware');
 const eventController = require('../controllers/eventController');
-const authMiddleware = require('../middleware/authMiddleware');
 const uploadMiddleware = require('../middleware/uploadMiddleware');
-
-
-// Protected routes
-router.use(authMiddleware.protect);
 
 // Public routes
 router.get('/', eventController.getAllEvents);
 router.get('/:id', eventController.getEvent);
 
+// Protected routes (admin only)
+router.use(protect);
+router.use(restrictToAdmin);
 
 router.post('/',
   uploadMiddleware.array('images', 5),
@@ -28,8 +27,6 @@ router.delete('/:id', eventController.deleteEvent);
 router.post('/:id/register', eventController.registerForEvent);
 
 // Admin only routes
-router.use(authMiddleware.restrictTo('admin'));
-
 //router.patch('/:id/feature', eventController.toggleFeatureEvent);
 
 module.exports = router;

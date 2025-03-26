@@ -49,9 +49,9 @@ const AppRouter = () => {
           <Route 
             path="/admin/dashboard" 
             element={
-              <AdminRoute>
+             
                 <DashboardLayout><AdminDashboard /></DashboardLayout>
-              </AdminRoute>
+          
             } 
           />
 

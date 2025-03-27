@@ -1,29 +1,34 @@
 import React from 'react';
+import { cn } from '@/lib/utils';
 
-const Spinner = ({ size = 'medium', color = 'blue' }) => {
+const Spinner = ({ size = 'medium', color = 'primary', className }) => {
   const sizeClasses = {
-    small: 'w-6 h-6',
-    medium: 'w-10 h-10',
-    large: 'w-16 h-16'
+    small: 'w-4 h-4',
+    medium: 'w-8 h-8',
+    large: 'w-12 h-12'
   };
 
   const colorClasses = {
-    blue: 'border-blue-500',
-    green: 'border-green-500',
-    red: 'border-red-500'
+    primary: 'border-primary dark:border-primary-light',
+    secondary: 'border-secondary dark:border-secondary-light',
+    success: 'border-success dark:border-success-light',
+    error: 'border-error dark:border-error-light'
   };
 
   return (
     <div className="flex justify-center items-center">
       <div 
-        className={`
-          ${sizeClasses[size]} 
-          ${colorClasses[color]} 
-          border-4 border-t-4 border-t-transparent 
-          rounded-full 
-          animate-spin
-        `}
-      ></div>
+        className={cn(
+          sizeClasses[size],
+          'border-2',
+          'border-t-transparent',
+          'rounded-full',
+          'animate-spin',
+          colorClasses[color],
+          'transition-colors duration-200',
+          className
+        )}
+      />
     </div>
   );
 };

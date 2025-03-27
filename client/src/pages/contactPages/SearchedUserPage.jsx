@@ -57,7 +57,7 @@ const SearchedUserPage = () => {
     }
 
     return (
-        <div className=" min-h-screen flex flex-col  bg-white dark:bg-gray-800  w-full p-8 transition-all duration-300 animate-fade-in">
+        <div className="min-h-screen flex flex-col bg-white dark:bg-gray-800 w-full p-8 transition-all duration-300 animate-fade-in mt-16">
             <nav className="sticky top-0 z-50 bg-gradient-to-br from-transparent via-[rgba(145,165,202,0.4)] to-transparent dark:bg-gradient-to-br dark:from-transparent dark:via-[rgba(55,65,81,0.4)] dark:to-transparent shadow-sm backdrop-blur-md">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">

@@ -1,33 +1,31 @@
-import { ArrowPathIcon, CloudArrowUpIcon, FingerPrintIcon, LockClosedIcon } from '@heroicons/react/24/outline'
+import { ArrowPathIcon, CloudArrowUpIcon, FingerPrintIcon, LockClosedIcon, MapIcon, DocumentCheckIcon, ShieldCheckIcon, BuildingIcon } from '@heroicons/react/24/outline'
 import { useTheme } from "../../context/ThemeContext/ThemeContext";
-
 
 const features = [
   {
-    name: 'Host event virtually',
+    name: 'Digital Land Registration',
     description:
-      'Event hosting feature includes location type physical, virtual and hybrid',
-    icon: CloudArrowUpIcon,
+      'Register your land properties digitally with our secure and efficient system. Upload documents, verify ownership, and get instant confirmation.',
+    icon: DocumentCheckIcon,
   },
   {
-    name: 'Advanced security',
+    name: 'Property Verification',
     description:
-      'Arcu egestas dolor vel iaculis in ipsum mauris. Tincidunt mattis aliquet hac quis. Id hac maecenas ac donec pharetra eget.',
-    icon: FingerPrintIcon,
+      'Our advanced verification system ensures authenticity of land documents and ownership details, preventing fraud and disputes.',
+    icon: ShieldCheckIcon,
   },
   {
-    name: 'SSL certificates',
+    name: 'Land Survey Integration',
     description:
-      'Describe the product here. Include important features, pricing and other relevant info.',
-    icon: LockClosedIcon,
+      'Seamlessly integrate with land survey data, providing accurate measurements and boundary information for your properties.',
+    icon: MapIcon,
   },
   {
-    name: 'Hackathon Series',
+    name: 'Property Portfolio Management',
     description:
-      'Quisque est vel vulputate cursus. Risus proin diam nunc commodo. Lobortis auctor congue commodo diam neque.',
-    icon: ArrowPathIcon,
+      'Manage multiple properties, track their status, and access all related documents in one centralized dashboard.',
+    icon: BuildingIcon,
   },
-  
 ]
 
 export default function Goals() {
@@ -38,13 +36,12 @@ export default function Goals() {
             duration-500  dark:bg-gray-900">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl lg:text-center ">
-          <h2 className="text-base/7 font-semibold text-indigo-600 dark:text-pink-600">Deploy faster</h2>
+          <h2 className="text-base/7 font-semibold text-indigo-600 dark:text-pink-600">Secure Land Management</h2>
           <p className="mt-2 text-4xl font-semibold tracking-tight text-pretty text-gray-900 sm:text-5xl lg:text-balance dark:text-gray-200">
-            Everything you need to deploy your event
+            Everything you need to manage your land properties
           </p>
           <p className="mt-6 text-lg/8 text-gray-600  dark:text-gray-400">
-            Quis tellus eget adipiscing convallis sit sit eget aliquet quis. Suspendisse eget egestas a elementum
-            pulvinar et feugiat blandit at. In mi viverra elit nunc.
+            Streamline your land registration and management process with our comprehensive platform
           </p>
         </div>
         <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-4xl">

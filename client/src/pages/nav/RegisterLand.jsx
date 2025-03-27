@@ -10,7 +10,8 @@ import {
   AlertCircle, 
   CheckCircle2,
   Building2,
-  ArrowLeft
+  ArrowLeft,
+  Shield
 } from 'lucide-react';
 
 const RegisterLand = () => {
@@ -23,16 +24,23 @@ const RegisterLand = () => {
     description: '',
     price: '',
     documents: null,
+    existingRecordId: '',
+    claimType: ''
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   const landTypes = [
-    'Agricultural',
-    'Residential',
-    'Commercial',
-    'Industrial',
-    'Mixed Use',
+    'residential',
+    'commercial',
+    'agricultural',
+    'industrial'
+  ];
+
+  const claimTypes = [
+    'ownership',
+    'transfer',
+    'update'
   ];
 
   const handleChange = (e) => {
@@ -158,10 +166,47 @@ const RegisterLand = () => {
                   <option value="">Select Land Type</option>
                   {landTypes.map((type) => (
                     <option key={type} value={type}>
-                      {type}
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="flex items-center space-x-2 text-gray-700 font-medium">
+                  <Shield className="w-5 h-5 text-blue-500" />
+                  <span>Claim Type *</span>
+                </label>
+                <select
+                  name="claimType"
+                  value={formData.claimType}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                >
+                  <option value="">Select Claim Type</option>
+                  {claimTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="flex items-center space-x-2 text-gray-700 font-medium">
+                  <FileText className="w-5 h-5 text-blue-500" />
+                  <span>Existing Record ID *</span>
+                </label>
+                <input
+                  type="text"
+                  name="existingRecordId"
+                  value={formData.existingRecordId}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  placeholder="Enter existing record ID"
+                />
               </div>
 
               <div className="space-y-2">

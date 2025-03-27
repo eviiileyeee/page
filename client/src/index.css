@@ -4,6 +4,11 @@
 
 /* Define CSS Variables for Color Palette */
 :root {
+    /* Light Theme Colors */
+    --color-bg: #ffffff;
+    --color-text: #111827;
+    --color-text-secondary: #4b5563;
+    
     /* Primary Colors */
     --color-primary: #2563eb;
     --color-primary-light: #60a5fa;
@@ -29,10 +34,6 @@
     --color-error-light: #f87171;
     --color-error-dark: #dc2626;
     
-    /* Gradient Colors */
-    --gradient-primary: linear-gradient(to right, var(--color-primary), var(--color-secondary));
-    --gradient-secondary: linear-gradient(to right, var(--color-secondary), var(--color-primary));
-    
     /* Neutral Colors */
     --color-gray-50: #f9fafb;
     --color-gray-100: #f3f4f6;
@@ -44,8 +45,24 @@
     --color-gray-700: #374151;
     --color-gray-800: #1f2937;
     --color-gray-900: #111827;
-  }
-                                 
+}
+
+/* Dark Theme Colors */
+.dark {
+    --color-bg: #111827;
+    --color-text: #f9fafb;
+    --color-text-secondary: #9ca3af;
+    
+    /* Primary Colors in Dark Mode */
+    --color-primary: #60a5fa;
+    --color-primary-light: #93c5fd;
+    --color-primary-dark: #2563eb;
+    
+    /* Secondary Colors in Dark Mode */
+    --color-secondary: #818cf8;
+    --color-secondary-light: #a5b4fc;
+    --color-secondary-dark: #4f46e5;
+}
 
 /* Import the custom fonts */
 @font-face {
@@ -64,61 +81,68 @@
     font-style: normal;
 }
 
-/* Apply fonts */
-body {
-    font-family: 'NeueMontreal-Regular', sans-serif; /* Default font for normal text */
-    margin: 0;
-    padding: 0;
-    background-color: var(--color-bg-light);
-    color: var(--color-text-dark);
+/* Base styles */
+@layer base {
+    body {
+        @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-200;
+        font-family: 'NeueMontreal-Regular', sans-serif;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        @apply font-heading;
+    }
 }
 
-/* Utility classes */
-.font-normal {
-    font-family: 'NeueMontreal-Regular', sans-serif;
+/* Component styles */
+@layer components {
+    .btn {
+        @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+    }
+
+    .btn-primary {
+        @apply bg-primary text-white hover:bg-primary-dark;
+    }
+
+    .btn-secondary {
+        @apply bg-secondary text-white hover:bg-secondary-dark;
+    }
+
+    .btn-outline {
+        @apply border-2 border-primary text-primary hover:bg-primary hover:text-white dark:border-primary-light dark:text-primary-light dark:hover:bg-primary-light dark:hover:text-gray-900;
+    }
+
+    .card {
+        @apply bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors duration-200;
+    }
 }
 
-.font-heading {
-    font-family: 'FoundersGrotesk-Semibold', sans-serif;
+/* Utility styles */
+@layer utilities {
+    .text-gradient {
+        @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary;
+    }
 }
 
-/* Apply heading font to main headings */
-h1, h2, h3, h4, h5, h6 {
-    font-family: 'FoundersGrotesk-Semibold', sans-serif;
+/* Scrollbar styles */
+::-webkit-scrollbar {
+    @apply w-2;
 }
 
-/* Button styles */
-button {
-    cursor: pointer;
-    border: none;
-    outline: none;
-    color: var(--color-button-text);
-    padding: 10px 20px;
-    border-radius: 5px;
+::-webkit-scrollbar-track {
+    @apply bg-gray-100 dark:bg-gray-800;
 }
 
-/* Use CSS Variables for Colors */
-.bg-primary {
-    background-color: var(--color-primary);
+::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 dark:bg-gray-600 rounded-full;
 }
 
-.bg-secondary {
-    background-color: var(--color-secondary);
+::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400 dark:bg-gray-500;
 }
-
-.text-primary {
-    color: var(--color-primary);
-}
-
-.text-secondary {
-    color: var(--color-secondary);
-}
-
 
 #services::-webkit-scrollbar{
     display: none;
 }
-
 
 /* For Webkit browsers (Chrome, Safari) */
 ::-webkit-scrollbar {

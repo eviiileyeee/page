@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { MapPin, Shield, Clock, Check, Star } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
-
+import Goals from '../components/subPages/Goals';
 
 const Hero = () => {
   const [activeTestimonial, setActiveTestimonial] = useState(0);
@@ -178,6 +178,7 @@ const Hero = () => {
           </div>
         </div>
       </section>
+      <Goals />
 
       {/* CTA Section */}
       <section className="py-20 px-4 bg-primary text-white">

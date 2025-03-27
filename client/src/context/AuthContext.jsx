@@ -13,73 +13,115 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    checkAuth();
+    let timeoutId;
+    
+    const initializeAuth = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const adminToken = localStorage.getItem('adminToken');
+        
+        // Try admin auth first if admin token exists
+        if (adminToken) {
+          api.defaults.headers.common['Authorization'] = `Bearer ${adminToken}`;
+          try {
+            const adminResponse = await api.get('/api/admin/me');
+            if (adminResponse.data) {
+              setAdmin(adminResponse.data);
+              localStorage.setItem('admin', JSON.stringify(adminResponse.data));
+              // Clear any user session
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+              setUser(null);
+              setInitialized(true);
+              setLoading(false);
+              return;
+            }
+          } catch (error) {
+            console.error('Admin verification failed:', error);
+            handleAuthError('admin');
+          }
+        }
+
+        // Try user auth if admin auth failed or no admin token
+        if (token) {
+          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          try {
+            const response = await api.get('/api/auth/me');
+            if (response.data) {
+              setUser(response.data);
+              localStorage.setItem('user', JSON.stringify(response.data));
+              setInitialized(true);
+              setLoading(false);
+              return;
+            }
+          } catch (error) {
+            console.error('User verification failed:', error);
+            handleAuthError('user');
+          }
+        }
+
+        // If no valid tokens found, complete initialization
+        setInitialized(true);
+        setLoading(false);
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        handleAuthError('all');
+        setInitialized(true);
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, []);
 
-  const checkAuth = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const adminToken = localStorage.getItem('adminToken');
-
-      setUser(null);
-      setAdmin(null);
-
-      if (adminToken) {
-        api.defaults.headers.common['Authorization'] = `Bearer ${adminToken}`;
-        try {
-          const adminResponse = await api.get('/api/admin/me');
-          if (adminResponse.data) {
-            setAdmin(adminResponse.data);
-            setLoading(false);
-            return;
-          }
-        } catch (adminError) {
-          console.error('Admin auth error:', adminError);
-          localStorage.removeItem('adminToken');
-          delete api.defaults.headers.common['Authorization'];
-        }
-      }
-
-      if (token) {
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        try {
-          const response = await api.get('/api/auth/me');
-          if (response.data) {
-            setUser(response.data);
-          }
-        } catch (userError) {
-          console.error('User auth error:', userError);
-          localStorage.removeItem('token');
-          delete api.defaults.headers.common['Authorization'];
-        }
-      }
-    } catch (error) {
-      console.error('Auth check error:', error);
-      localStorage.removeItem('token');
-      localStorage.removeItem('adminToken');
-      delete api.defaults.headers.common['Authorization'];
-      setUser(null);
-      setAdmin(null);
-    } finally {
-      setLoading(false);
+  const handleAuthError = (type) => {
+    switch (type) {
+      case 'admin':
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('admin');
+        delete api.defaults.headers.common['Authorization'];
+        setAdmin(null);
+        break;
+      case 'user':
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        delete api.defaults.headers.common['Authorization'];
+        setUser(null);
+        break;
+      case 'all':
+        localStorage.removeItem('token');
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('user');
+        localStorage.removeItem('admin');
+        delete api.defaults.headers.common['Authorization'];
+        setUser(null);
+        setAdmin(null);
+        break;
     }
   };
 
   const login = async (email, password) => {
     try {
+      // Clear any existing admin session
+      handleAuthError('admin');
+
       const response = await api.post('/api/auth/login', { email, password });
-      const token = response.data.token;
-      const { user } = response.data;
+      const { token, user: userData } = response.data;
 
       localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(userData));
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setUser(user);
+      setUser(userData);
 
-      // ✅ Send notification after successful login
       await notificationService.postNotifications({
-        id: user._id,
+        id: userData._id,
         type: 'security',
         title: 'New login detected',
         message: 'A new login was detected from Chrome on Windows.',
@@ -92,53 +134,48 @@ export const AuthProvider = ({ children }) => {
       return response.data;
     } catch (error) {
       toast.error(error.response?.data?.message || 'Login failed');
-      localStorage.removeItem('token');
-      delete api.defaults.headers.common['Authorization'];
-      setUser(null);
+      handleAuthError('user');
       return false;
     }
   };
 
   const adminLogin = async (email, password, adminKey) => {
     try {
+      // Clear any existing user session
+      handleAuthError('user');
+
       const response = await api.post('/api/auth/admin/login', { 
         email, 
         password, 
         adminKey 
       });
-      const token = response.data.token;
-      const { user } = response.data;
+      const { token, user: adminData } = response.data;
+
+      if (adminData.role !== 'admin') {
+        throw new Error('Access denied. Admin privileges required.');
+      }
 
       localStorage.setItem('adminToken', token);
+      localStorage.setItem('admin', JSON.stringify(adminData));
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setAdmin(user);
+      setAdmin(adminData);
 
-      // Clear any existing user session when logging in as admin
-      localStorage.removeItem('token');
-      setUser(null);
-
-      toast.success('Admin successfully logged in!');
-      return response.data;
+      toast.success('Successfully logged in as admin!');
+      return true;
     } catch (error) {
       toast.error(error.response?.data?.message || 'Admin login failed');
-      localStorage.removeItem('adminToken');
-      delete api.defaults.headers.common['Authorization'];
-      setAdmin(null);
+      handleAuthError('admin');
       return false;
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    delete api.defaults.headers.common['Authorization'];
-    setUser(null);
+    handleAuthError('user');
     toast.success('Logged out successfully');
   };
 
   const adminLogout = () => {
-    localStorage.removeItem('adminToken');
-    delete api.defaults.headers.common['Authorization'];
-    setAdmin(null);
+    handleAuthError('admin');
     toast.success('Admin logged out successfully');
   };
 
@@ -196,20 +233,25 @@ export const AuthProvider = ({ children }) => {
     user,
     admin,
     loading,
+    initialized,
     login,
     adminLogin,
     logout,
     adminLogout,
     register,
-    checkAuth,
     updateUser,
     isAuthenticated: !!user,
     isAdminAuthenticated: !!admin
   };
 
+  // Don't render anything until initial auth check is complete
+  if (!initialized) {
+    return null;
+  }
+
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

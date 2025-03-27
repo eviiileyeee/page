@@ -33,7 +33,7 @@ const AdminLandRecords = lazy(() => import('../pages/admin/AdminLandRecords'));
 const AdminVerifyRequests = lazy(() => import('../pages/admin/AdminVerifyRequests'));
 
 const AppRouter = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAdminAuthenticated, admin } = useAuth();
 
   return (
     <BrowserRouter>
@@ -43,11 +43,42 @@ const AppRouter = () => {
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<DashboardLayout><Hero /></DashboardLayout>} />
-          <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" />} />
-          <Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/dashboard" />} />
+          <Route 
+            path="/login" 
+            element={
+              isAuthenticated ? (
+                <Navigate to="/dashboard" />
+              ) : isAdminAuthenticated ? (
+                <Navigate to="/admin/dashboard" />
+              ) : (
+                <LoginPage />
+              )
+            } 
+          />
+          <Route 
+            path="/register" 
+            element={
+              isAuthenticated ? (
+                <Navigate to="/dashboard" />
+              ) : isAdminAuthenticated ? (
+                <Navigate to="/admin/dashboard" />
+              ) : (
+                <RegisterPage />
+              )
+            } 
+          />
 
           {/* Admin routes */}
-          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route 
+            path="/admin/login" 
+            element={
+              isAdminAuthenticated ? (
+                <Navigate to="/admin/dashboard" />
+              ) : (
+                <AdminLogin />
+              )
+            } 
+          />
           <Route path="/admin/register" element={<AdminRegister />} />
           <Route 
             path="/admin/dashboard" 

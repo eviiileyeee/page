@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
   Home, 
   Building2, 
@@ -18,22 +19,52 @@ import {
   FileText,
   Image as ImageIcon
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 const Property = () => {
+  const { user, admin } = useAuth();
+  const navigate = useNavigate();
   const [properties, setProperties] = useState([
     {
       id: 1,
-      title: "Modern Downtown plot",
-      type: "Apartment",
-      location: "123 Main St, City",
-      price: "$2,500",
-      bedrooms: 2,
-      bathrooms: 2,
-      area: "1,200 sq ft",
-      status: "Approved",
-      image: "https://thumbs.dreamstime.com/b/outdoor-empty-land-sale-thailand-145925723.jpg"
+      title: "Agricultural Land Plot",
+      type: "Agricultural",
+      location: "Rural District, State",
+      price: "$45,000",
+      area: "2.5 acres",
+      status: "Verified",
+      image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1032&q=80"
     },
-    // Add more sample properties as needed
+    {
+      id: 2,
+      title: "Commercial Development Site",
+      type: "Commercial",
+      location: "Business District, City",
+      price: "$250,000",
+      area: "1.2 acres",
+      status: "Pending Verification",
+      image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1032&q=80"
+    },
+    {
+      id: 3,
+      title: "Residential Plot",
+      type: "Residential",
+      location: "Suburban Area, City",
+      price: "$75,000",
+      area: "0.8 acres",
+      status: "Verified",
+      image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1032&q=80"
+    },
+    {
+      id: 4,
+      title: "Industrial Zone Land",
+      type: "Industrial",
+      location: "Industrial Park, City",
+      price: "$180,000",
+      area: "3.5 acres",
+      status: "Verified",
+      image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1032&q=80"
+    }
   ]);
 
   const [activeTab, setActiveTab] = useState('all');
@@ -46,7 +77,7 @@ const Property = () => {
           <h1 className="text-3xl font-bold text-gray-800">My Properties</h1>
           <p className="text-gray-600">Manage and monitor your property portfolio</p>
         </div>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors">
+        <button onClick={() => navigate('/admin/add-property')} className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors">
           <Plus size={20} />
           Add New Property
         </button>
@@ -151,18 +182,18 @@ const Property = () => {
               </div>
               <div className="flex items-center justify-between mb-4">
                 <span className="text-2xl font-bold text-blue-600">{property.price}</span>
-                <span className="px-3 py-1 bg-green-100 text-green-600 rounded-full text-sm">
+                <span className={`px-3 py-1 rounded-full text-sm ${
+                  property.status === 'Verified' 
+                    ? 'bg-green-100 text-green-600' 
+                    : 'bg-yellow-100 text-yellow-600'
+                }`}>
                   {property.status}
                 </span>
               </div>
               <div className="flex items-center gap-4 text-gray-600">
                 <div className="flex items-center gap-1">
-                  <BedDouble size={16} />
-                  <span>{property.bedrooms}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Bath size={16} />
-                  <span>{property.bathrooms}</span>
+                  <Building2 size={16} />
+                  <span>{property.type}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Square size={16} />
@@ -173,6 +204,14 @@ const Property = () => {
           </div>
         ))}
       </div>
+
+      {(user || admin) && (
+        <>
+          {/* Notifications */}
+          {/* User menu */}
+          {/* Logout button */}
+        </>
+      )}
     </div>
   );
 };

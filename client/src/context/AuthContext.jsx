@@ -1,11 +1,17 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import api from '../api/api';
 import { notificationService } from '../services/notificationService';
 
 const AuthContext = createContext();
 
+export const useAuth = () => {
+  return useContext(AuthContext);
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -15,15 +21,32 @@ export const AuthProvider = ({ children }) => {
   const checkAuth = async () => {
     try {
       const token = localStorage.getItem('token');
+      const adminToken = localStorage.getItem('adminToken');
+
       if (token) {
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        const response = await api.get('/api/users/me');
-        setUser(response.data);
+        const response = await api.get('/api/auth/me');
+        if (response.ok) {
+          setUser(response.data);
+        } else {
+          localStorage.removeItem('token');
+          delete api.defaults.headers.common['Authorization'];
+          setUser(null);
+        }
+      }
+
+      if (adminToken) {
+        const response = await api.get('/api/admin/me');
+        if (response.ok) {
+          setAdmin(response.data);
+        } else {
+          localStorage.removeItem('adminToken');
+          delete api.defaults.headers.common['Authorization'];
+          setAdmin(null);
+        }
       }
     } catch (error) {
-      console.error('Auth check failed:', error);
-      localStorage.removeItem('token');
-      delete api.defaults.headers.common['Authorization'];
+      console.error('Auth check error:', error);
     } finally {
       setLoading(false);
     }
@@ -31,7 +54,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await api.post('/api/users/login', { email, password });
+      const response = await api.post('/api/auth/login', { email, password });
       const token = response.data.token;
       const { user } = response.data;
 
@@ -50,24 +73,35 @@ export const AuthProvider = ({ children }) => {
         icon: 1,
       });
 
+      toast.success('Successfully logged in!');
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Login failed' };
+      toast.error(error.response?.data?.message || 'Login failed');
+      localStorage.removeItem('token');
+      delete api.defaults.headers.common['Authorization'];
+      setUser(null);
+      return false;
     }
   };
 
-  const register = async (userData) => {
+  const adminLogin = async (email, password, adminKey) => {
     try {
-      const response = await api.post('/api/users/register', userData);
-      const { token, user } = response.data;
+      const response = await api.post('/api/admin/login', { email, password, adminKey });
+      const token = response.data.token;
+      const { user } = response.data;
 
-      localStorage.setItem('token', token);
+      localStorage.setItem('adminToken', token);
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setUser(user);
+      setAdmin(user);
 
+      toast.success('Admin successfully logged in!');
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Registration failed' };
+      toast.error('Admin login failed');
+      localStorage.removeItem('adminToken');
+      delete api.defaults.headers.common['Authorization'];
+      setAdmin(null);
+      return false;
     }
   };
 
@@ -75,8 +109,33 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     delete api.defaults.headers.common['Authorization'];
     setUser(null);
+    toast.success('Logged out successfully');
   };
-  
+
+  const adminLogout = () => {
+    localStorage.removeItem('adminToken');
+    delete api.defaults.headers.common['Authorization'];
+    setAdmin(null);
+    toast.success('Admin logged out successfully');
+  };
+
+  const register = async (userData) => {
+    try {
+      const response = await api.post('/api/auth/register', userData);
+      const { token, user } = response.data;
+
+      localStorage.setItem('token', token);
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      setUser(user);
+
+      toast.success('Successfully registered!');
+      return response.data;
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Registration failed');
+      return false;
+    }
+  };
+
   const updateUser = async (updatedUser) => {
     try {
       console.log("Inside update route::::");
@@ -96,7 +155,7 @@ export const AuthProvider = ({ children }) => {
         formData.append("profileImage", updatedUser.profileImage);
       }
 
-      const response = await api.put(`/api/users/uploadDetails/${updatedUser._id}`, formData, {
+      const response = await api.put(`/api/auth/uploadDetails/${updatedUser._id}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -109,12 +168,25 @@ export const AuthProvider = ({ children }) => {
       console.error("Error updating user:", error);
     }
   };
-  
+
+  const value = {
+    user,
+    admin,
+    loading,
+    login,
+    adminLogin,
+    logout,
+    adminLogout,
+    register,
+    checkAuth,
+    updateUser,
+    isAuthenticated: !!user,
+    isAdminAuthenticated: !!admin
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, checkAuth, updateUser }}>
+    <AuthContext.Provider value={value}>
       {!loading && children}
     </AuthContext.Provider>
   );
 };
-
-export const useAuth = () => useContext(AuthContext);

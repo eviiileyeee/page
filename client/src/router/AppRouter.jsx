@@ -28,6 +28,9 @@ const RegisterLand = lazy(() => import('../pages/nav/RegisterLand'));
 const VerifyLand = lazy(() => import('../pages/nav/VerifyLand'));
 const Dashboard = lazy(() => import('../pages/nav/Dashboard'));
 const AdminDashboard = lazy(() => import('../pages/admin/AdminDashboard'));
+const AdminUsers = lazy(() => import('../pages/admin/AdminUsers'));
+const AdminLandRecords = lazy(() => import('../pages/admin/AdminLandRecords'));
+const AdminVerifyRequests = lazy(() => import('../pages/admin/AdminVerifyRequests'));
 
 const AppRouter = () => {
   const { isAuthenticated } = useAuth();
@@ -49,9 +52,33 @@ const AppRouter = () => {
           <Route 
             path="/admin/dashboard" 
             element={
-             
+              <AdminRoute>
                 <DashboardLayout><AdminDashboard /></DashboardLayout>
-          
+              </AdminRoute>
+            } 
+          />
+          <Route 
+            path="/admin/users" 
+            element={
+              <AdminRoute>
+                <DashboardLayout><AdminUsers /></DashboardLayout>
+              </AdminRoute>
+            } 
+          />
+          <Route 
+            path="/admin/land-records" 
+            element={
+              <AdminRoute>
+                <DashboardLayout><AdminLandRecords /></DashboardLayout>
+              </AdminRoute>
+            } 
+          />
+          <Route 
+            path="/admin/verify-requests" 
+            element={
+              <AdminRoute>
+                <DashboardLayout><AdminVerifyRequests /></DashboardLayout>
+              </AdminRoute>
             } 
           />
 

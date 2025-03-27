@@ -35,8 +35,8 @@ const loginLimiter = rateLimit({
 router.use(apiLimiter);
 
 // Public routes with specific rate limits
-router.post('/register', rateLimit({ windowMs: 60 * 60 * 1000, max: 3 }), register); // 3 registrations per hour
-router.post('/login', loginLimiter, login);
+router.post('/register', register); // 3 registrations per hour
+router.post('/login',  login);
 router.post('/google-auth', handleGoogleAuth);
 
 // Admin creation route (public but requires admin key)

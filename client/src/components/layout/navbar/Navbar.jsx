@@ -57,6 +57,12 @@ const Navbar = () => {
       { name: "Register Land", path: "/register-land", icon: FileText },
       { name: "Verify Land", path: "/verify-land", icon: ShieldCheck },
     ],
+    admin: [
+      { name: "Admin Dashboard", path: "/admin/dashboard", icon: Home },
+      { name: "Manage Users", path: "/admin/users", icon: User },
+      { name: "Land Records", path: "/admin/land-records", icon: FileText },
+      { name: "Verify Requests", path: "/admin/verify-requests", icon: ShieldCheck },
+    ],
     government: [
       { name: "Dashboard", path: "/gov-dashboard", icon: Home },
       { name: "Land Records", path: "/land-records", icon: FileText },
@@ -80,31 +86,51 @@ const Navbar = () => {
         <div className="flex justify-between h-16 items-center">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link to="/" className="flex items-center">
+            <Link to={user?.role === 'admin' ? '/admin/dashboard' : '/'} className="flex items-center">
               <MapPin className="h-8 w-8 text-primary" />
               <span className="ml-2 text-2xl font-bold text-primary dark:text-white">
-                LandSys
+                {user?.role === 'admin' ? 'Admin Panel' : 'LandSys'}
               </span>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {navLinks[user?.role || 'user'].map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`
-                  flex items-center space-x-2 text-sm font-medium
-                  ${activeTab === link.path.slice(1) 
-                    ? 'text-primary dark:text-white' 
-                    : 'text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-white'}
-                `}
-              >
-                <link.icon className="h-5 w-5" />
-                <span>{link.name}</span>
-              </Link>
-            ))}
+            {user?.role === 'admin' ? (
+              // Admin Navigation
+              navLinks.admin.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`
+                    flex items-center space-x-2 text-sm font-medium
+                    ${activeTab === link.path.slice(1) 
+                      ? 'text-primary dark:text-white' 
+                      : 'text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-white'}
+                  `}
+                >
+                  <link.icon className="h-5 w-5" />
+                  <span>{link.name}</span>
+                </Link>
+              ))
+            ) : (
+              // User Navigation
+              navLinks.user.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`
+                    flex items-center space-x-2 text-sm font-medium
+                    ${activeTab === link.path.slice(1) 
+                      ? 'text-primary dark:text-white' 
+                      : 'text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-white'}
+                  `}
+                >
+                  <link.icon className="h-5 w-5" />
+                  <span>{link.name}</span>
+                </Link>
+              ))
+            )}
           </div>
 
           {/* Right side buttons */}

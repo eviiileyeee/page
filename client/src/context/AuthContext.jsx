@@ -23,30 +23,45 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       const adminToken = localStorage.getItem('adminToken');
 
-      if (token) {
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        const response = await api.get('/api/auth/me');
-        if (response.ok) {
-          setUser(response.data);
-        } else {
-          localStorage.removeItem('token');
+      setUser(null);
+      setAdmin(null);
+
+      if (adminToken) {
+        api.defaults.headers.common['Authorization'] = `Bearer ${adminToken}`;
+        try {
+          const adminResponse = await api.get('/api/admin/me');
+          if (adminResponse.data) {
+            setAdmin(adminResponse.data);
+            setLoading(false);
+            return;
+          }
+        } catch (adminError) {
+          console.error('Admin auth error:', adminError);
+          localStorage.removeItem('adminToken');
           delete api.defaults.headers.common['Authorization'];
-          setUser(null);
         }
       }
 
-      if (adminToken) {
-        const response = await api.get('/api/admin/me');
-        if (response.ok) {
-          setAdmin(response.data);
-        } else {
-          localStorage.removeItem('adminToken');
+      if (token) {
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        try {
+          const response = await api.get('/api/auth/me');
+          if (response.data) {
+            setUser(response.data);
+          }
+        } catch (userError) {
+          console.error('User auth error:', userError);
+          localStorage.removeItem('token');
           delete api.defaults.headers.common['Authorization'];
-          setAdmin(null);
         }
       }
     } catch (error) {
       console.error('Auth check error:', error);
+      localStorage.removeItem('token');
+      localStorage.removeItem('adminToken');
+      delete api.defaults.headers.common['Authorization'];
+      setUser(null);
+      setAdmin(null);
     } finally {
       setLoading(false);
     }
@@ -86,7 +101,11 @@ export const AuthProvider = ({ children }) => {
 
   const adminLogin = async (email, password, adminKey) => {
     try {
-      const response = await api.post('/api/admin/login', { email, password, adminKey });
+      const response = await api.post('/api/auth/admin/login', { 
+        email, 
+        password, 
+        adminKey 
+      });
       const token = response.data.token;
       const { user } = response.data;
 
@@ -94,10 +113,14 @@ export const AuthProvider = ({ children }) => {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setAdmin(user);
 
+      // Clear any existing user session when logging in as admin
+      localStorage.removeItem('token');
+      setUser(null);
+
       toast.success('Admin successfully logged in!');
       return response.data;
     } catch (error) {
-      toast.error('Admin login failed');
+      toast.error(error.response?.data?.message || 'Admin login failed');
       localStorage.removeItem('adminToken');
       delete api.defaults.headers.common['Authorization'];
       setAdmin(null);

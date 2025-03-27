@@ -49,7 +49,7 @@ exports.register = catchAsync(async (req, res, next) => {
 
 // Login user
 exports.login = catchAsync(async (req, res, next) => {
-  const { email, password, adminKey } = req.body;
+  const { email, password } = req.body;
 
   // Check if email and password exist
   if (!email || !password) {
@@ -62,19 +62,55 @@ exports.login = catchAsync(async (req, res, next) => {
     return next(new AppError('Incorrect email or password', 401));
   }
 
-  // If adminKey is provided, verify it and check admin role
-  if (adminKey) {
-    if (adminKey !== 'admin_secure_key_12345') {
-      return next(new AppError('Invalid admin access key', 401));
-    }
-    
-    if (user.role !== 'admin') {
-      return next(new AppError('Access denied. Admin privileges required.', 403));
-    }
+  // Don't allow admin login through regular login route
+  if (user.role === 'admin') {
+    return next(new AppError('Please use admin login', 401));
   }
 
   // Generate token
   const token = signToken(user._id);
+
+  // Remove password from output
+  user.password = undefined;
+
+  res.status(200).json({
+    status: 'success',
+    token,
+    user
+  });
+});
+
+// Admin login
+exports.adminLogin = catchAsync(async (req, res, next) => {
+  const { email, password, adminKey } = req.body;
+
+  // Check if email, password and adminKey exist
+  if (!email || !password || !adminKey) {
+    return next(new AppError('Please provide email, password and admin key', 400));
+  }
+
+  // Verify admin key first
+  if (adminKey !== process.env.ADMIN_ACCESS_KEY) {
+    return next(new AppError('Invalid admin access key', 401));
+  }
+
+  // Check if user exists && password is correct
+  const user = await User.findOne({ email }).select('+password');
+  if (!user || !(await user.comparePassword(password))) {
+    return next(new AppError('Incorrect email or password', 401));
+  }
+
+  // Verify user is an admin
+  if (user.role !== 'admin') {
+    return next(new AppError('Access denied. Admin privileges required.', 403));
+  }
+
+  // Generate admin token with additional admin claim
+  const token = jwt.sign(
+    { id: user._id, isAdmin: true },
+    process.env.JWT_SECRET,
+    { expiresIn: '7d' }
+  );
 
   // Remove password from output
   user.password = undefined;

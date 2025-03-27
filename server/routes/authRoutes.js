@@ -1,5 +1,5 @@
 const express = require('express');
-const { register, login, getMe, uploadDetails, getAllUsers, handleGoogleAuth, createAdmin } = require('../controllers/authController');
+const { register, login, getMe, uploadDetails, getAllUsers, handleGoogleAuth, createAdmin, adminLogin } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 const passport = require("passport");
@@ -37,6 +37,7 @@ router.use(apiLimiter);
 // Public routes with specific rate limits
 router.post('/register', register); // 3 registrations per hour
 router.post('/login',  login);
+router.post('/admin/login', loginLimiter, adminLogin);
 router.post('/google-auth', handleGoogleAuth);
 
 // Admin creation route (public but requires admin key)

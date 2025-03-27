@@ -23,7 +23,7 @@ const RegisterLand = () => {
     location: '',
     description: '',
     price: '',
-    documents: null,
+    documents: [],
     existingRecordId: '',
     claimType: ''
   });
@@ -54,7 +54,7 @@ const RegisterLand = () => {
   const handleFileChange = (e) => {
     setFormData((prev) => ({
       ...prev,
-      documents: e.target.files[0],
+      documents: Array.from(e.target.files),
     }));
   };
 
@@ -64,26 +64,44 @@ const RegisterLand = () => {
     setSuccess('');
 
     try {
-      if (!formData.landTitle || !formData.landType || !formData.area || !formData.location || !formData.price) {
-        setError('Please fill in all required fields');
+      console.log('Starting form submission');
+      console.log('Form data:', formData);
+
+      // Validate required fields
+      if (!formData.landTitle || !formData.landType || !formData.area || 
+          !formData.location || !formData.price || !formData.claimType || 
+          !formData.existingRecordId || !formData.documents.length) {
+        const missingFields = Object.entries(formData)
+          .filter(([key, value]) => !value || (Array.isArray(value) && !value.length))
+          .map(([key]) => key);
+        console.error('Missing required fields:', missingFields);
+        setError('Please fill in all required fields and upload at least one document');
         return;
       }
 
-      const token = localStorage.getItem('token'); // Get token from localStorage
+      const token = localStorage.getItem('token');
       if (!token) {
+        console.error('No authentication token found');
         setError('Please login to register land');
         return;
       }
+      console.log('Token found');
 
       const submitData = new FormData();
       Object.keys(formData).forEach((key) => {
-        if (key === 'documents' && formData[key]) {
-          submitData.append('documents', formData[key]);
-        } else if (key !== 'documents') {
+        if (key === 'documents') {
+          console.log('Processing documents:', formData.documents);
+          formData.documents.forEach((doc, index) => {
+            console.log(`Adding document ${index + 1}:`, doc.name);
+            submitData.append('documents', doc);
+          });
+        } else {
+          console.log(`Adding field ${key}:`, formData[key]);
           submitData.append(key, formData[key]);
         }
       });
-      console.log(submitData);
+
+      console.log('Sending request to server...');
       const response = await fetch('http://localhost:8001/api/land/register', {
         method: 'POST',
         headers: {
@@ -93,16 +111,28 @@ const RegisterLand = () => {
       });
 
       const data = await response.json();
+      console.log('Server response:', data);
 
       if (!response.ok) {
+        console.error('Server error:', {
+          status: response.status,
+          statusText: response.statusText,
+          data
+        });
         throw new Error(data.message || 'Failed to register land');
       }
 
+      console.log('Land registration successful');
       setSuccess('Land registered successfully!');
       setTimeout(() => {
         navigate('/dashboard');
       }, 2000);
     } catch (err) {
+      console.error('Form submission error:', {
+        message: err.message,
+        stack: err.stack,
+        name: err.name
+      });
       setError(err.message || 'An error occurred while registering the land');
     }
   };
@@ -276,7 +306,7 @@ const RegisterLand = () => {
             <div className="space-y-2">
               <label className="flex items-center space-x-2 text-gray-700 font-medium">
                 <Upload className="w-5 h-5 text-blue-500" />
-                <span>Documents</span>
+                <span>Documents * (Max 5 files)</span>
               </label>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors cursor-pointer">
                 <input
@@ -285,6 +315,9 @@ const RegisterLand = () => {
                   accept=".pdf,.doc,.docx"
                   className="hidden"
                   id="file-upload"
+                  required
+                  multiple
+                  max="5"
                 />
                 <label htmlFor="file-upload" className="cursor-pointer">
                   <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -292,11 +325,16 @@ const RegisterLand = () => {
                   <p className="text-sm text-gray-500 mt-2">or click to browse</p>
                 </label>
               </div>
-              {formData.documents && (
-                <p className="text-sm text-gray-600 flex items-center space-x-2">
-                  <FileText className="w-4 h-4" />
-                  <span>Selected file: {formData.documents.name}</span>
-                </p>
+              {formData.documents.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <p className="text-sm font-medium text-gray-700">Selected files:</p>
+                  {formData.documents.map((doc, index) => (
+                    <p key={index} className="text-sm text-gray-600 flex items-center space-x-2">
+                      <FileText className="w-4 h-4" />
+                      <span>{doc.name}</span>
+                    </p>
+                  ))}
+                </div>
               )}
             </div>
 

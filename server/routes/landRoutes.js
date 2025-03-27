@@ -19,8 +19,20 @@ const landValidation = [
     .trim()
     .notEmpty()
     .withMessage('Land type is required')
-    .isIn(['Agricultural', 'Residential', 'Commercial', 'Industrial', 'Mixed Use'])
+    .isIn(['residential', 'commercial', 'agricultural', 'industrial'])
     .withMessage('Invalid land type'),
+  
+  body('claimType')
+    .trim()
+    .notEmpty()
+    .withMessage('Claim type is required')
+    .isIn(['ownership', 'transfer', 'update'])
+    .withMessage('Invalid claim type'),
+  
+  body('existingRecordId')
+    .trim()
+    .notEmpty()
+    .withMessage('Existing record ID is required'),
   
   body('area')
     .isNumeric()
@@ -50,7 +62,7 @@ const landValidation = [
 router.post(
   '/register',
   protect,
-  upload.single('documents'),
+  upload.array('documents', 5), // Allow up to 5 documents
   landValidation,
   registerLand
 );

@@ -1,4 +1,13 @@
-import { ArrowPathIcon, CloudArrowUpIcon, FingerPrintIcon, LockClosedIcon, MapIcon, DocumentCheckIcon, ShieldCheckIcon, BuildingIcon } from '@heroicons/react/24/outline'
+import { 
+  ArrowPathIcon, 
+  CloudArrowUpIcon, 
+  FingerPrintIcon, 
+  LockClosedIcon,
+  BuildingOfficeIcon,
+  DocumentCheckIcon,
+  ShieldCheckIcon,
+  MapIcon
+} from '@heroicons/react/24/outline'
 import { useTheme } from "../../context/ThemeContext/ThemeContext";
 
 const features = [
@@ -24,7 +33,7 @@ const features = [
     name: 'Property Portfolio Management',
     description:
       'Manage multiple properties, track their status, and access all related documents in one centralized dashboard.',
-    icon: BuildingIcon,
+    icon: BuildingOfficeIcon,
   },
 ]
 
